@@ -24,7 +24,7 @@ export const incrementerPoints = async ({ client = pool, idUtilisateur, points }
 
   if (rows.length === 0) {
     const error = new Error('Utilisateur introuvable');
-    error.status = 404;
+    error.status = 400;
     throw error;
   }
 

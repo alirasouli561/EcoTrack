@@ -43,6 +43,32 @@ NODE_ENV=development
 
 ---
 
+## Tests automatisés
+
+### Lancer une base PostgreSQL de test
+
+```bash
+docker compose -f docker-compose.test.yml up -d
+```
+
+### Exécuter les tests
+
+```bash
+export GAMIFICATIONS_DATABASE_URL=postgresql://ecotrack:ecotrack@localhost:5435/ecotrack_test
+npm test
+```
+
+Autres commandes utiles :
+
+```bash
+npm run test:watch
+npm run test:coverage
+```
+
+> Astuce : vous pouvez également utiliser `DATABASE_URL` au lieu de `GAMIFICATIONS_DATABASE_URL` en environnement de test.
+
+---
+
 ## Endpoints principaux
 
 ### Points
@@ -98,3 +124,5 @@ Exemple payload:
 ## Base de données
 
 Le script SQL se trouve dans `sql/gamification.sql`. Il crée uniquement les tables spécifiques aux défis et s'appuie sur le schéma global EcoTrack pour les points, badges et notifications.
+
+Pour les tests automatisés, le service initialise un schéma minimal (tables utilisateur, badge, user_badge, historique_points, notification) afin d'isoler la base de test.
