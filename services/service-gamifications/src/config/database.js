@@ -17,6 +17,68 @@ pool.on('connect', () => {
 
 export const ensureGamificationTables = async () => {
   await pool.query(
+    `CREATE TABLE IF NOT EXISTS utilisateur (
+      id_utilisateur SERIAL PRIMARY KEY,
+      points INT NOT NULL DEFAULT 0
+    )`
+  );
+
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS badge (
+      id_badge SERIAL PRIMARY KEY,
+      code VARCHAR(50) UNIQUE NOT NULL,
+      nom VARCHAR(100) NOT NULL,
+      description TEXT
+    )`
+  );
+
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS user_badge (
+      id_utilisateur INT NOT NULL,
+      id_badge INT NOT NULL,
+      date_obtention TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id_utilisateur, id_badge),
+      CONSTRAINT fk_user_badge_utilisateur
+        FOREIGN KEY (id_utilisateur)
+        REFERENCES utilisateur(id_utilisateur)
+        ON DELETE CASCADE,
+      CONSTRAINT fk_user_badge_badge
+        FOREIGN KEY (id_badge)
+        REFERENCES badge(id_badge)
+        ON DELETE CASCADE
+    )`
+  );
+
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS historique_points (
+      id_historique SERIAL PRIMARY KEY,
+      id_utilisateur INT NOT NULL,
+      delta_points INT NOT NULL,
+      raison VARCHAR(100),
+      date_creation TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_historique_utilisateur
+        FOREIGN KEY (id_utilisateur)
+        REFERENCES utilisateur(id_utilisateur)
+        ON DELETE CASCADE
+    )`
+  );
+
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS notification (
+      id_notification SERIAL PRIMARY KEY,
+      id_utilisateur INT NOT NULL,
+      type VARCHAR(30) NOT NULL,
+      titre VARCHAR(150) NOT NULL,
+      corps TEXT NOT NULL,
+      date_creation TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_notification_utilisateur
+        FOREIGN KEY (id_utilisateur)
+        REFERENCES utilisateur(id_utilisateur)
+        ON DELETE CASCADE
+    )`
+  );
+
+  await pool.query(
     `CREATE TABLE IF NOT EXISTS gamification_defi (
       id_defi SERIAL PRIMARY KEY,
       titre VARCHAR(100) NOT NULL,
@@ -52,6 +114,19 @@ export const ensureGamificationTables = async () => {
   );
 
   await pool.query('CREATE INDEX IF NOT EXISTS idx_gamification_participation_defi ON gamification_participation_defi(id_defi, id_utilisateur)');
+
+  await pool.query(
+    `INSERT INTO badge (code, nom, description)
+     VALUES
+      ('DEBUTANT', 'Débutant', 'Premier palier de points atteint'),
+      ('ECO_GUERRIER', 'Éco-Guerrier', 'Engagement régulier dans la communauté'),
+      ('SUPER_HEROS', 'Super-Héros', 'Champion des bonnes pratiques')
+     ON CONFLICT (code) DO NOTHING`
+  );
+};
+
+export const initGamificationDb = async () => {
+  await ensureGamificationTables();
 };
 
 export default pool;
