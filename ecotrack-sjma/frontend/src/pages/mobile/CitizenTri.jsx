@@ -1,17 +1,33 @@
 import { useEffect, useState } from 'react';
 import MobileScreenHeader from '../../components/mobile/MobileScreenHeader';
 import { triCategories } from '../../services/mockData';
+import { typeConteneurService } from '../../services/typeConteneurService';
 import './CitizenTri.css';
 
-// Static waste guide data (no backend endpoint — static is appropriate for a guide)
-// triCategories imported from mockData as canonical source of truth
+// Static waste guide data — no backend /guide-tri endpoint (static is correct for a guide)
+// triCategories from mockData is the canonical source of truth.
+// API container types are fetched to cross-reference and badge matching categories.
 
 export default function CitizenTri() {
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
+  // API container type names for cross-reference badges (silent fallback if API unavailable)
+  const [apiTypeNames, setApiTypeNames] = useState([]);
 
-  // Unique color-based filter chips derived from categories
+  useEffect(() => {
+    typeConteneurService.getAll()
+      .then(res => {
+        const types = Array.isArray(res) ? res : (res?.data ?? []);
+        // Normalize to lowercase name strings for fuzzy matching
+        const names = types
+          .map(t => (t.nom || t.name || '').toLowerCase().trim())
+          .filter(Boolean);
+        setApiTypeNames(names);
+      })
+      .catch(() => {}); // silent — static data is the fallback
+  }, []);
+
   const FILTERS = [
     { key: 'all', label: 'Tout' },
     { key: 'recyclable', label: '♻️ Recyclable' },
@@ -24,6 +40,13 @@ export default function CitizenTri() {
     recyclable: [1, 2, 3],  // Emballages, Verre, Papier
     biodechet: [4],          // Compost
     special: [6],            // Déchets spéciaux
+  };
+
+  // Check if a category name matches any API-returned container type
+  const isConfirmedByApi = (catName) => {
+    if (apiTypeNames.length === 0) return false;
+    const normalized = catName.toLowerCase();
+    return apiTypeNames.some(t => normalized.includes(t) || t.includes(normalized.split(' ')[0]));
   };
 
   const filtered = triCategories
@@ -104,7 +127,17 @@ export default function CitizenTri() {
                   <i className={`fas ${cat.icon}`}></i>
                 </div>
                 <div className="tri-cat-info">
-                  <span className="tri-cat-name">{cat.name}</span>
+                  <span className="tri-cat-name">
+                    {cat.name}
+                    {isConfirmedByApi(cat.name) && (
+                      <span
+                        title="Type de conteneur reconnu par le système"
+                        style={{ marginLeft: 6, fontSize: '0.7em', color: '#4CAF50', verticalAlign: 'middle' }}
+                      >
+                        ✓
+                      </span>
+                    )}
+                  </span>
                   <span className="tri-cat-count">{cat.items.length} éléments</span>
                 </div>
                 <i className={`fas fa-chevron-${expanded === cat.id ? 'up' : 'down'} tri-chevron`}></i>

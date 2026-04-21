@@ -4,22 +4,20 @@ import { useAuth } from '../../context/AuthContext';
 import { citizenService } from '../../services/citizenService';
 import './CitizenBoutique.css';
 
-// Static reward catalog — no backend endpoint for rewards yet (MVP)
-const CATALOG = [
-  { id: 1, name: 'Bon de réduction 5€', description: 'Valable dans les commerces partenaires', cost: 500, icon: 'fa-tag', iconBg: '#e3f2fd', iconColor: '#2196F3' },
-  { id: 2, name: 'Planter un arbre', description: 'Un arbre planté en votre nom', cost: 800, icon: 'fa-tree', iconBg: '#e8f5e9', iconColor: '#4CAF50' },
-  { id: 3, name: 'Badge Super Éco-Citoyen', description: 'Badge exclusif sur votre profil', cost: 1500, icon: 'fa-award', iconBg: '#fff3e0', iconColor: '#FF9800' },
-  { id: 4, name: 'Entrée piscine municipale', description: 'Entrée gratuite piscine municipale', cost: 2000, icon: 'fa-swimming-pool', iconBg: '#f3e5f5', iconColor: '#9c27b0' },
-];
-
 export default function CitizenBoutique() {
   const { user } = useAuth();
   const userId = user?.id || user?.id_utilisateur;
 
   const [points, setPoints] = useState(null);
+  const [catalog, setCatalog] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState('');
   const [redeeming, setRedeeming] = useState(null);
+
+  useEffect(() => {
+    // Load reward catalog (static Promise for MVP)
+    citizenService.getRewards().then(setCatalog);
+  }, []);
 
   useEffect(() => {
     if (!userId) return;
@@ -27,7 +25,6 @@ export default function CitizenBoutique() {
     citizenService.getMyStats(userId)
       .then(data => {
         if (!alive) return;
-        // stats endpoint returns { totalPoints, ... }
         const pts = data?.totalPoints ?? data?.data?.totalPoints ?? 0;
         setPoints(pts);
       })
@@ -66,7 +63,7 @@ export default function CitizenBoutique() {
 
         <h3 className="boutique-section-title">Bons &amp; Avantages</h3>
         <div className="boutique-grid">
-          {CATALOG.map(item => {
+          {catalog.map(item => {
             const canAfford = points !== null && points >= item.cost;
             const isRedeeming = redeeming === item.id;
             return (
