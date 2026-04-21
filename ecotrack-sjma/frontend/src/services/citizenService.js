@@ -46,11 +46,16 @@ export const citizenService = {
   getContainerById: (id) => api.get(`/api/containers/id/${id}`).then((r) => r.data?.data ?? r.data),
 
   // --- Gamification ---
-  getMyStats: (userId) => api.get(`/api/gamification/stats/utilisateurs/${userId}/stats`).then((r) => r.data),
-  getDefis: () => api.get('/api/gamification/defis').then((r) => r.data),
-  getBadges: () => api.get('/api/gamification/badges').then((r) => r.data),
-  getMyBadges: (userId) => api.get(`/api/gamification/badges/utilisateurs/${userId}`).then((r) => r.data),
-  getClassement: () => api.get('/api/gamification/classement').then((r) => r.data),
+  getMyStats: (userId) =>
+    api.get(`/api/gamification/stats/utilisateurs/${userId}/stats`).then((r) => r.data?.data ?? r.data),
+  getDefis: () =>
+    api.get('/api/gamification/defis').then((r) => r.data?.data ?? r.data),
+  getBadges: () =>
+    api.get('/api/gamification/badges').then((r) => r.data?.data ?? r.data),
+  getMyBadges: (userId) =>
+    api.get(`/api/gamification/badges/utilisateurs/${userId}`).then((r) => r.data?.data ?? r.data),
+  getClassement: (limit = 10) =>
+    api.get(`/api/gamification/classement?limit=${limit}`).then((r) => r.data?.data ?? r.data),
 
   // --- Notifications ---
   getNotifications: () => api.get('/notifications').then((r) => r.data?.data ?? r.data),
